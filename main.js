@@ -1,40 +1,66 @@
-function startClassification()
-{
-  navigator.mediaDevices.getUserMedia({ audio: true});
-  classifier = ml5.soundClassifier('https://teachablemachine.withgoogle.com/models/N6vHUQ_XM/model.json', modelReady);
+Webcam.set({
+    width: 350,
+    height: 300,
+    image_format: 'png',
+    png_quality: 90
+});
+camera = document.getElementById("camera");
+Webcam.attach('#camera');
+
+function Takesnapshot(){
+    Webcam.snap(function (data_uri){
+        document.getElementById("result").innerHTML = '<img id = "captured_image" src = "'+data_uri+'"/>';
+    });
+}
+console.log('ml5 version', ml5.version);
+classifier = ml5.imageClassifier('https://teachablemachine.withgoogle.com/models/LyUavRADa/model.json', modelLoaded);
+
+function modelLoaded(){
+    console.log("modelLoaded");
 }
 
-function modelReady(){
-  classifier.classify(gotResults);
+function speak(){
+    var synth = window.speechSynthesis;
+    speak_data_1 = "The first prediction is "+prediction_1;
+    speak_data_2 = " and the second prediction is "+prediction_2;
+    var utterthis = new SpeechSynthesisUtterance(speak_data_1+speak_data_2);
+    synth.speak(utterthis);
 }
-var dog = 0;
-var cat = 0;
 
-function gotResults(error, results) {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log(results);
-    random_number_r = Math.floor(Math.random() * 255) + 1;
-    random_number_g = Math.floor(Math.random() * 255) + 1;
-    random_number_b = Math.floor(Math.random() * 255) + 1;
+function Check(){
+    img = document.getElementById("captured_image");
+    classifier.classify(img, gotResult);
+}
 
-
-    document.getElementById("result_label").innerHTML = 'Detected voice is of  - '+ results[0].label;
-    document.getElementById("result_count").innerHTML = 'Detected Dog - '+dog+ ' Detected Cat - '+cat;
-    document.getElementById("result_label").style.color = "rgb("+random_number_r+","+random_number_g+","+random_number_r+")";
-    document.getElementById("result_count").style.color = "rgb("+random_number_r+","+random_number_g+","+random_number_r+")";
-
-    img = document.getElementById('animal_image');
-
-    if (results[0].label == "Dog") {
-      img.src = 'bark.png';
-      dog = dog+1;
-    } else if (results[0].label == "Cat") {
-      img.src = 'meow.png';
-      cat = cat + 1;
-    } else{
-      img.src = 'backgroundNoise.jpg';
+function gotResult(error, results){
+    if(error){
+        console.error(error);
     }
-  }
+    else{
+        console.log(results);
+        document.getElementById("result_emotion_name").innerHTML = results[0].label;
+        document.getElementById("result_emotion_name2").innerHTML = results[1].label;
+        prediction_1 = results[0].label;
+        prediction_2 = results[1].label;
+        speak();
+        if(results[0].label == "Thumbs Up"){
+            document.getElementById("update_emoji").innerHTML = "&#128077;";
+            }
+        if(results[0].label == "Victory"){
+            document.getElementById("update_emoji").innerHTML = "&#9996;";
+            }
+        if(results[0].label == "Best"){
+            document.getElementById("update_emoji").innerHTML = "&#128076;";
+            }
+        if(results[1].label == "Thumbs Up"){
+            document.getElementById("update_emoji2").innerHTML = "&#128077;";
+            }
+        if(results[1].label == "Victory"){
+            document.getElementById("update_emoji2").innerHTML = "&#9996;";
+            }
+        if(results[1].label == "Best"){
+            document.getElementById("update_emoji2").innerHTML = "&#128076;";
+            }
+            
+    }
 }
